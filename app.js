@@ -99,5 +99,38 @@ app.get('/editProduct/:id', (req,res) => {
   });
 });
 
+app.post('/editProduct/:id', (req, res) => {
+  const productId = req.params.id;
+  // Extract product data from the request body
+  const { name, quantity, price } = req.body;
+  const sql = 'UPDATE products SET productName = ? , quantity = ?, price = ? WHERE productId = ?';
+  // Update the product in the database
+  connection.query( sql , [name, quantity, price, productId], (error, results) => {
+    if (error) {
+      // Handle any error that occurs during the database operation
+      console.error("Error updating product:", error);
+      res.send('Error updating product');
+    } else {
+      // Send a success response
+      res.redirect('/');
+    }
+  });
+});
+
+app.get('/deleteProduct/:id', (req, res) => {
+  const productId = req.params.id;
+  const sql = 'DELETE FROM products WHERE productId = ?';
+  connection.query( sql , [productId], (error, results) => {
+    if (error) {
+      // Handle any error that occurs during the database operation
+      console.error("Error deleting product:", error);
+      res.send('Error deleting product');
+    } else {
+      // Send a success response
+      res.redirect('/');
+    }
+  });
+});
+
 const PORT = process.env.PORT || 3000; 
 app.listen(PORT, () => console.log(`Server running on port http://localhost:${PORT}`));
