@@ -121,13 +121,18 @@ app.get('/editProduct/:id', (req,res) => {
   });
 });
 
-app.post('/editProduct/:id', (req, res) => {
+app.post('/editProduct/:id', upload.single('image'), (req, res) => {
   const productId = req.params.id;
   // Extract product data from the request body
   const { name, quantity, price } = req.body;
-  const sql = 'UPDATE products SET productName = ? , quantity = ?, price = ? WHERE productId = ?';
+  let image = req.body.currentImage; // Use the current image if no new image is uploaded 
+  if (req.file) {
+    image = req.file.filename; // Get the filename of the uploaded image
+  }
+
+  const sql = 'UPDATE products SET productName = ? , quantity = ?, price = ?, image = ? WHERE productId = ?';
   // Update the product in the database
-  connection.query( sql , [name, quantity, price, productId], (error, results) => {
+  connection.query( sql , [name, quantity, price, image, productId], (error, results) => {
     if (error) {
       // Handle any error that occurs during the database operation
       console.error("Error updating product:", error);
