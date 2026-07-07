@@ -1,7 +1,20 @@
 const express = require('express'); 
 const mysql = require('mysql2'); 
+const multer = require('multer');
 const app = express(); 
  
+// Set up multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'public/images'); // Directory to save uploaded files
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname); //specify the filename for the uploaded file
+  }
+});
+
+const upload = multer({ storage: storage });
+
 // Create MySQL connection 
 const connection = mysql.createConnection({ 
     host: 'localhost', 
@@ -24,6 +37,8 @@ app.set('view engine', 'ejs');
 app.use(express.static('public')); 
  // enable form processing
 app.use(express.urlencoded({ extended: false }));
+
+app.use(express.static('public'));
 
 app.get('/', (req, res) => {
     const sql = 'SELECT * FROM PRODUCTS';
@@ -62,9 +77,16 @@ app.get('/product/:id', (req, res) => {
 app.get('/addProduct', (req, res) => {
   res.render('addProduct'); 
 });
-app.post('/addProduct', (req, res) => {
+app.post('/addProduct', upload.single('image'), (req, res) => {
   // Extract product data from the request body
-  const { name, quantity, price, image } = req.body;
+  const { name, quantity, price } = req.body;
+  let image;
+  if (req.file) {
+    image = req.file.filename; // Get the filename of the uploaded image
+  } else {
+    image = null; // Handle the case where no image is uploaded
+  }
+  
   const sql = 'INSERT INTO products (productName, quantity, price, image) VALUES (?, ?, ?, ?)';
   // Insert the new product into the database
   connection.query( sql , [name, quantity, price, image], (error, results) => {
